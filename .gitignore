@@ -36,7 +36,9 @@ Thumbs.db
 
 # 部署相关
 deploy-package/
-*.bat
+# 保留重要的部署脚本，忽略其他批处理文件
+!一键配置后端.bat
+!连接到GitHub并推送.bat
 *.ps1
 *.sh
 
