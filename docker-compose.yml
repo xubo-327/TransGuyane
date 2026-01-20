@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # MongoDB 数据库
+  mongodb:
+    image: mongo:6.0
+    container_name: transguyane-mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=transguyane2024
+      - MONGO_INITDB_DATABASE=warehouse_management
+    networks:
+      - transguyane-network
+
+  # 后端 API 服务
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: transguyane-backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - MONGODB_URI=mongodb://admin:transguyane2024@mongodb:27017/warehouse_management?authSource=admin
+      - JWT_SECRET=${JWT_SECRET:-transguyane_jwt_secret_production_2024}
+      - WECHAT_APPID=${WECHAT_APPID:-}
+      - WECHAT_SECRET=${WECHAT_SECRET:-}
+    depends_on:
+      - mongodb
+    networks:
+      - transguyane-network
+
+  # 前端 Web 服务
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - REACT_APP_API_URL=${API_URL:-http://localhost:5000/api}
+    container_name: transguyane-frontend
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
+    networks:
+      - transguyane-network
+
+networks:
+  transguyane-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:

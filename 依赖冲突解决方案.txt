@@ -1,0 +1,53 @@
+========================================
+解决 TypeScript 版本冲突问题
+========================================
+
+问题描述：
+----------------------------------------
+react-scripts@5.0.1 需要 TypeScript 3.x 或 4.x
+但项目中使用的是 TypeScript 5.x
+导致 peer dependency 冲突
+
+解决方案（已自动修复）：
+----------------------------------------
+
+方法1：使用 --legacy-peer-deps（推荐）
+----------------------------------------
+在 frontend 目录下执行：
+
+npm install --legacy-peer-deps
+
+或者使用淘宝镜像：
+
+npm install --legacy-peer-deps --registry=https://registry.npmmirror.com
+
+方法2：使用修复脚本
+----------------------------------------
+双击运行：解决依赖冲突安装.bat
+
+方法3：降级 TypeScript（已修复 package.json）
+----------------------------------------
+我已经将 package.json 中的 TypeScript 版本从 5.2.2 降级到 4.9.5
+然后运行：
+
+npm install
+
+为什么使用 --legacy-peer-deps？
+----------------------------------------
+这个标志告诉 npm 忽略 peer dependency 冲突。
+虽然 TypeScript 5.x 与 react-scripts 5.0.1 的声明不兼容，
+但实际上通常可以正常工作。
+
+如果仍有问题：
+----------------------------------------
+1. 删除 node_modules 和 package-lock.json
+2. 清除缓存：npm cache clean --force
+3. 使用 --legacy-peer-deps 重新安装
+
+验证安装：
+----------------------------------------
+安装成功后，检查：
+- frontend/node_modules 目录存在
+- frontend/node_modules/.bin/react-scripts.cmd 存在
+
+然后运行：npm start

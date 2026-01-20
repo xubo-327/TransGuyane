@@ -1,0 +1,53 @@
+# 依赖
+node_modules/
+*/node_modules/
+package-lock.json
+yarn.lock
+
+# 构建输出
+build/
+dist/
+*.log
+
+# 环境变量
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+backend/.env
+frontend/.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# 临时文件
+*.tmp
+*.temp
+
+# 部署相关
+deploy-package/
+*.bat
+*.ps1
+*.sh
+
+# 文档和报告（保留重要文档）
+# docs/ 目录下的文档会被保留
+# 但临时报告文件会被忽略
+*检查报告.md
+*诊断*.md
+*问题*.md
+*解决方案*.md
+*修复*.md
+*测试*.md
+
+# 归档
+archive/
