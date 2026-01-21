@@ -11,10 +11,17 @@ const app = express();
 app.set('trust proxy', 1);
 
 // CORS 配置
+// GitHub Pages 部署在子目录时，浏览器发送的 origin 只包含域名，不包含子路径
+const allowedOrigins = process.env.NODE_ENV === 'production' && process.env.FRONTEND_URL
+  ? [
+      process.env.FRONTEND_URL,  // 例如: https://xubo-327.github.io
+      `${process.env.FRONTEND_URL}/TransGuyane`,  // 如果需要，也可以支持子路径
+      `${process.env.FRONTEND_URL}/TransGuyane/`  // 支持尾部斜杠
+    ]
+  : true;  // 开发环境或未配置时允许所有来源
+
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production'
-    ? process.env.FRONTEND_URL || true  // 生产环境：配置前端域名或允许所有
-    : true,  // 开发环境：允许所有来源
+  origin: allowedOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
