@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Table, Tag, Input, Button, message, Tooltip, Empty, Select, Row, Col } from 'antd';
+import { Table, Input, Button, message, Tooltip, Empty, Select, Row, Col } from 'antd';
 import {
   SearchOutlined,
   ArrowLeftOutlined,
@@ -405,10 +405,10 @@ const UserInfo = () => {
             showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条记录`,
             itemRender: (page, type, originalElement) => {
               if (type === 'prev') {
-                return <a style={{ padding: '0 8px' }}>← 上一页</a>;
+                return <span style={{ padding: '0 8px', cursor: 'pointer' }}>← 上一页</span>;
               }
               if (type === 'next') {
-                return <a style={{ padding: '0 8px' }}>下一页 →</a>;
+                return <span style={{ padding: '0 8px', cursor: 'pointer' }}>下一页 →</span>;
               }
               return originalElement;
             },

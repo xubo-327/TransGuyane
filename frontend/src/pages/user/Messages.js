@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { List, Input, Button, Card, Avatar, message, Tag, Empty, Spin, Modal, AutoComplete } from 'antd';
 import { 
   SendOutlined, 
@@ -30,29 +30,11 @@ const UserMessages = () => {
   const [searchLoading, setSearchLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
-  useEffect(() => {
-    loadConversations();
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
-  useEffect(() => {
-    if (selectedUserId) {
-      loadMessages(selectedUserId);
-      const interval = setInterval(() => {
-        loadMessages(selectedUserId, false);
-      }, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [selectedUserId]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const loadConversations = async () => {
+  const loadConversations = useCallback(async () => {
     try {
       const result = await messagesAPI.getConversations();
       setConversations(result);
@@ -62,9 +44,9 @@ const UserMessages = () => {
     } catch (error) {
       console.error('加载对话列表失败:', error);
     }
-  };
+  }, [selectedUserId]);
 
-  const loadMessages = async (userId, showLoading = true) => {
+  const loadMessages = useCallback(async (userId, showLoading = true) => {
     if (showLoading) setLoading(true);
     try {
       const result = await messagesAPI.getMessages(userId);
@@ -74,7 +56,25 @@ const UserMessages = () => {
     } finally {
       if (showLoading) setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadConversations();
+  }, [loadConversations]);
+
+  useEffect(() => {
+    if (selectedUserId) {
+      loadMessages(selectedUserId);
+      const interval = setInterval(() => {
+        loadMessages(selectedUserId, false);
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [selectedUserId, loadMessages]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
 
   const handleSend = async () => {
     if (!content.trim()) {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { List, Input, Button, Card, Avatar, message } from 'antd';
 import { SendOutlined, UserOutlined } from '@ant-design/icons';
 import { messagesAPI } from '../../services/api';
@@ -11,32 +11,13 @@ const AdminMessages = () => {
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [content, setContent] = useState('');
-  const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
 
-  useEffect(() => {
-    loadConversations();
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
-  useEffect(() => {
-    if (selectedUserId) {
-      loadMessages(selectedUserId);
-      const interval = setInterval(() => {
-        loadMessages(selectedUserId, false);
-      }, 3000);
-      return () => clearInterval(interval);
-    }
-  }, [selectedUserId]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const loadConversations = async () => {
+  const loadConversations = useCallback(async () => {
     try {
       const result = await messagesAPI.getConversations();
       setConversations(result);
@@ -46,19 +27,34 @@ const AdminMessages = () => {
     } catch (error) {
       console.error('加载对话列表失败:', error);
     }
-  };
+  }, [selectedUserId]);
 
-  const loadMessages = async (userId, showLoading = true) => {
-    if (showLoading) setLoading(true);
+  const loadMessages = useCallback(async (userId) => {
     try {
       const result = await messagesAPI.getMessages(userId);
       setMessages(result);
     } catch (error) {
       console.error('加载消息失败:', error);
-    } finally {
-      if (showLoading) setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadConversations();
+  }, [loadConversations]);
+
+  useEffect(() => {
+    if (selectedUserId) {
+      loadMessages(selectedUserId);
+      const interval = setInterval(() => {
+        loadMessages(selectedUserId);
+      }, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [selectedUserId, loadMessages]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
 
   const handleSend = async () => {
     if (!content.trim()) {
@@ -72,7 +68,7 @@ const AdminMessages = () => {
         content: content.trim(),
       });
       setContent('');
-      loadMessages(selectedUserId, false);
+      loadMessages(selectedUserId);
       loadConversations();
     } catch (error) {
       message.error(error.error || '发送失败');

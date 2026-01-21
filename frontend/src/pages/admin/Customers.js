@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Table, 
   Input, 
@@ -23,8 +23,7 @@ import {
   UserOutlined,
   MessageOutlined,
   SendOutlined,
-  TeamOutlined,
-  CrownOutlined
+  TeamOutlined
 } from '@ant-design/icons';
 import { usersAPI, messagesAPI } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
@@ -51,29 +50,11 @@ const AdminCustomers = () => {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const messagesEndRef = useRef(null);
 
-  useEffect(() => {
-    loadCustomers();
-  }, [pagination.current, roleFilter]);
-
-  useEffect(() => {
-    if (selectedCustomer) {
-      loadMessages(selectedCustomer._id);
-      const interval = setInterval(() => {
-        loadMessages(selectedCustomer._id, false);
-      }, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [selectedCustomer]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  }, []);
 
-  const loadCustomers = async () => {
+  const loadCustomers = useCallback(async () => {
     setLoading(true);
     try {
       const params = {
@@ -92,7 +73,25 @@ const AdminCustomers = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pagination.current, pagination.pageSize, searchText, roleFilter]);
+
+  useEffect(() => {
+    loadCustomers();
+  }, [loadCustomers]);
+
+  useEffect(() => {
+    if (selectedCustomer) {
+      loadMessages(selectedCustomer._id);
+      const interval = setInterval(() => {
+        loadMessages(selectedCustomer._id, false);
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [selectedCustomer]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
 
   const loadMessages = async (userId, showLoading = true) => {
     if (showLoading) setLoadingMessages(true);
@@ -165,21 +164,6 @@ const AdminCustomers = () => {
     } catch (error) {
       message.error(error.error || '更新角色失败');
     }
-  };
-
-  const getRoleTag = (role) => {
-    if (role === 'admin') {
-      return (
-        <Tag icon={<CrownOutlined />} color="gold">
-          管理员
-        </Tag>
-      );
-    }
-    return (
-      <Tag icon={<UserOutlined />} color="blue">
-        普通用户
-      </Tag>
-    );
   };
 
   const columns = [
@@ -349,8 +333,8 @@ const AdminCustomers = () => {
             showQuickJumper: true,
             showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
             itemRender: (page, type, originalElement) => {
-              if (type === 'prev') return <a style={{ padding: '0 8px' }}>← 上一页</a>;
-              if (type === 'next') return <a style={{ padding: '0 8px' }}>下一页 →</a>;
+              if (type === 'prev') return <span style={{ padding: '0 8px', cursor: 'pointer' }}>← 上一页</span>;
+              if (type === 'next') return <span style={{ padding: '0 8px', cursor: 'pointer' }}>下一页 →</span>;
               return originalElement;
             },
           }}

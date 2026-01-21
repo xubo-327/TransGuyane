@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Table, Input, Button, message, Tooltip, Empty, Modal, Form, Select, Space, Popconfirm, Tag, Timeline, Spin, Drawer } from 'antd';
 import {
   SearchOutlined,
@@ -48,21 +48,16 @@ const AdminInfo = () => {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadOrders();
-    loadBatches();
-  }, [pagination.current, pagination.pageSize]);
-
-  const loadBatches = async () => {
+  const loadBatches = useCallback(async () => {
     try {
       const result = await batchesAPI.list({ page: 1, pageSize: 100 });
       setBatches(result?.batches || []);
     } catch (error) {
       console.error('加载批次失败:', error);
     }
-  };
+  }, []);
 
-  const loadOrders = async (search = '') => {
+  const loadOrders = useCallback(async (search = '') => {
     setLoading(true);
     try {
       const params = {
@@ -85,7 +80,12 @@ const AdminInfo = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pagination.current, pagination.pageSize, activeFilter, searchText]);
+
+  useEffect(() => {
+    loadOrders();
+    loadBatches();
+  }, [loadOrders, loadBatches]);
 
   const handleSearch = () => {
     setPagination(prev => ({ ...prev, current: 1 }));
