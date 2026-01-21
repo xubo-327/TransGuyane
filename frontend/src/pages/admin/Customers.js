@@ -33,7 +33,9 @@ const AdminCustomers = () => {
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
-  const [pagination, setPagination] = useState({ current: 1, pageSize: 20, total: 0 });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [total, setTotal] = useState(0);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -54,23 +56,22 @@ const AdminCustomers = () => {
     setLoading(true);
     try {
       const params = {
-        page: pagination.current,
-        pageSize: pagination.pageSize,
+        page: currentPage,
+        pageSize: pageSize,
       };
       if (searchText) params.search = searchText;
       if (roleFilter) params.role = roleFilter;
 
       const result = await usersAPI.list(params);
       setCustomers(result.users || []);
-      setPagination(prev => ({ ...prev, total: result.total || 0 }));
+      setTotal(result.total || 0);
     } catch (error) {
       message.error(error.error || '加载客户列表失败');
       setCustomers([]);
     } finally {
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.current, pagination.pageSize, searchText, roleFilter]);
+  }, [currentPage, pageSize, searchText, roleFilter]);
 
   useEffect(() => {
     loadCustomers();
@@ -103,19 +104,18 @@ const AdminCustomers = () => {
   };
 
   const handleSearch = () => {
-    setPagination(prev => ({ ...prev, current: 1 }));
-    loadCustomers();
+    setCurrentPage(1);
   };
 
   const handleReset = () => {
     setSearchText('');
     setRoleFilter('');
-    setPagination(prev => ({ ...prev, current: 1 }));
-    loadCustomers();
+    setCurrentPage(1);
   };
 
   const handleTableChange = (pag) => {
-    setPagination(prev => ({ ...prev, current: pag.current, pageSize: pag.pageSize }));
+    setCurrentPage(pag.current);
+    setPageSize(pag.pageSize);
   };
 
   const openMessageDrawer = (customer) => {
@@ -270,7 +270,7 @@ const AdminCustomers = () => {
           color="blue" 
           style={{ marginLeft: 16, borderRadius: 6 }}
         >
-          共 {pagination.total} 个客户
+          共 {total} 个客户
         </Tag>
       </div>
 
@@ -325,7 +325,9 @@ const AdminCustomers = () => {
           rowKey="_id"
           loading={loading}
           pagination={{
-            ...pagination,
+            current: currentPage,
+            pageSize: pageSize,
+            total: total,
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,

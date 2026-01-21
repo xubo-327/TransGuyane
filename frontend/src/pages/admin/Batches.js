@@ -25,7 +25,9 @@ const AdminBatches = () => {
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [selectedRows, setSelectedRows] = useState([]);
-  const [pagination, setPagination] = useState({ current: 1, pageSize: 20, total: 0 });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [total, setTotal] = useState(0);
   
   // 弹窗状态
   const [createModalVisible, setCreateModalVisible] = useState(false);
@@ -43,42 +45,37 @@ const AdminBatches = () => {
     setLoading(true);
     try {
       const params = {
-        page: pagination.current,
-        pageSize: pagination.pageSize,
+        page: currentPage,
+        pageSize: pageSize,
         search: searchText
       };
       const result = await batchesAPI.list(params);
       setBatches(result?.batches || []);
-      setPagination(prev => ({ ...prev, total: result?.total || 0 }));
+      setTotal(result?.total || 0);
     } catch (error) {
       message.error(error.error || '加载批次失败');
       setBatches([]);
     } finally {
       setLoading(false);
     }
-  }, [pagination.current, pagination.pageSize, searchText]);
+  }, [currentPage, pageSize, searchText]);
 
   useEffect(() => {
     loadBatches();
   }, [loadBatches]);
 
   const handleSearch = () => {
-    setPagination(prev => ({ ...prev, current: 1 }));
-    loadBatches();
+    setCurrentPage(1);
   };
 
   const handleReset = () => {
     setSearchText('');
-    setPagination(prev => ({ ...prev, current: 1 }));
-    loadBatches();
+    setCurrentPage(1);
   };
 
   const handleTableChange = (newPagination) => {
-    setPagination(prev => ({
-      ...prev,
-      current: newPagination.current,
-      pageSize: newPagination.pageSize,
-    }));
+    setCurrentPage(newPagination.current);
+    setPageSize(newPagination.pageSize);
   };
 
   // 创建批次
@@ -425,7 +422,7 @@ const AdminBatches = () => {
         
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, paddingTop: 16, borderTop: '1px solid #E5E7EB' }}>
           <div style={{ color: '#6B7280', fontSize: 14 }}>
-            {selectedRows.length > 0 ? `已选择 ${selectedRows.length} 个批次` : `共 ${pagination.total} 个批次`}
+            {selectedRows.length > 0 ? `已选择 ${selectedRows.length} 个批次` : `共 ${total} 个批次`}
           </div>
           
           <Space>
@@ -450,7 +447,9 @@ const AdminBatches = () => {
           loading={loading}
           rowSelection={rowSelection}
           pagination={{
-            ...pagination,
+            current: currentPage,
+            pageSize: pageSize,
+            total: total,
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,

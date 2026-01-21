@@ -31,7 +31,9 @@ const AdminInfo = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [batches, setBatches] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
-  const [pagination, setPagination] = useState({ current: 1, pageSize: 20, total: 0 });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [total, setTotal] = useState(0);
 
   // 弹窗状态
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -61,8 +63,8 @@ const AdminInfo = () => {
     setLoading(true);
     try {
       const params = {
-        page: pagination.current,
-        pageSize: pagination.pageSize,
+        page: currentPage,
+        pageSize: pageSize,
         search: search || searchText
       };
 
@@ -73,15 +75,14 @@ const AdminInfo = () => {
 
       const result = await ordersAPI.adminList(params);
       setOrders(result?.orders || []);
-      setPagination(prev => ({ ...prev, total: result?.total || 0 }));
+      setTotal(result?.total || 0);
     } catch (error) {
       message.error(error.error || '加载数据失败');
       setOrders([]);
     } finally {
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.current, pagination.pageSize, activeFilter, searchText]);
+  }, [currentPage, pageSize, activeFilter, searchText]);
 
   useEffect(() => {
     loadOrders();
@@ -89,39 +90,33 @@ const AdminInfo = () => {
   }, [loadOrders, loadBatches]);
 
   const handleSearch = () => {
-    setPagination(prev => ({ ...prev, current: 1 }));
-    loadOrders(searchText);
+    setCurrentPage(1);
   };
 
   const handleReset = () => {
     setSearchText('');
     setActiveFilter('all');
-    setPagination(prev => ({ ...prev, current: 1 }));
-    loadOrders('');
+    setCurrentPage(1);
   };
 
   const handleFilterChange = (filter) => {
     setActiveFilter(filter);
-    setPagination(prev => ({ ...prev, current: 1 }));
-    setTimeout(() => loadOrders(), 0);
+    setCurrentPage(1);
   };
 
   const handleTableChange = (newPagination) => {
-    setPagination(prev => ({
-      ...prev,
-      current: newPagination.current,
-      pageSize: newPagination.pageSize,
-    }));
+    setCurrentPage(newPagination.current);
+    setPageSize(newPagination.pageSize);
   };
 
   // 统计数据
   const stats = useMemo(() => {
-    const total = pagination.total;
+    const totalOrders = total;
     const signed = orders.filter(o => o.status === '已签收').length;
     const onWay = orders.filter(o => o.status === '在路上').length;
     const sent = orders.filter(o => o.status === '已发出').length;
-    return { total, signed, onWay, sent };
-  }, [orders, pagination.total]);
+    return { total: totalOrders, signed, onWay, sent };
+  }, [orders, total]);
 
   // 创建订单
   const handleCreate = () => {
@@ -510,7 +505,9 @@ const AdminInfo = () => {
           loading={loading}
           rowSelection={rowSelection}
           pagination={{
-            ...pagination,
+            current: currentPage,
+            pageSize: pageSize,
+            total: total,
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
