@@ -18,6 +18,8 @@ import {
 } from '@ant-design/icons';
 import { ordersAPI, batchesAPI, logisticsAPI } from '../../services/api';
 import { detectCourier } from '../../utils/courierDetector';
+import { useAuth } from '../../contexts/AuthContext';
+import { formatCustomerName } from '../../utils/customerNameUtils';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 
@@ -25,6 +27,7 @@ const { Option } = Select;
 const { TextArea } = Input;
 
 const AdminInfo = () => {
+  const { user } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
@@ -313,6 +316,7 @@ const AdminInfo = () => {
       dataIndex: 'customerName',
       key: 'customerName',
       width: 80,
+      render: (customerName, record) => formatCustomerName(customerName, user, record),
     },
     {
       title: '批次',

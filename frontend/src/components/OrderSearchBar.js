@@ -3,6 +3,8 @@ import { Input, Button, Modal, Table, message, Empty, Spin, Tooltip } from 'antd
 import { SearchOutlined } from '@ant-design/icons';
 import { ordersAPI } from '../services/api';
 import { detectCourier } from '../utils/courierDetector';
+import { useAuth } from '../contexts/AuthContext';
+import { formatCustomerName } from '../utils/customerNameUtils';
 import dayjs from 'dayjs';
 
 /**
@@ -10,6 +12,7 @@ import dayjs from 'dayjs';
  * 显示在每个页面底部，提供快速搜索功能
  */
 const OrderSearchBar = () => {
+  const { user } = useAuth();
   const [visible, setVisible] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [loading, setLoading] = useState(false);
@@ -102,6 +105,7 @@ const OrderSearchBar = () => {
       dataIndex: 'customerName',
       key: 'customerName',
       width: 100,
+      render: (customerName, record) => formatCustomerName(customerName, user, record),
     },
     {
       title: '批次',

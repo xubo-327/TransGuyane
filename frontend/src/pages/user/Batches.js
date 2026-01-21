@@ -12,6 +12,8 @@ import {
   CheckSquareOutlined
 } from '@ant-design/icons';
 import { batchesAPI, exportAPI } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
+import { formatCustomerName } from '../../utils/customerNameUtils';
 import { useNavigate } from 'react-router-dom';
 import { detectCourier } from '../../utils/courierDetector';
 import dayjs from 'dayjs';
@@ -19,6 +21,7 @@ import dayjs from 'dayjs';
 const { Panel } = Collapse;
 
 const UserBatches = () => {
+  const { user } = useAuth();
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
@@ -199,6 +202,7 @@ const UserBatches = () => {
       dataIndex: 'customerName',
       key: 'customerName',
       width: 100,
+      render: (customerName, record) => formatCustomerName(customerName, user, record),
     },
     {
       title: '状态',

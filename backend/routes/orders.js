@@ -19,7 +19,7 @@ router.get('/search', optionalAuthenticate, async (req, res) => {
     // 管理员可以搜索所有订单
     // 已登录普通用户只能搜索自己的订单
     // 未登录用户可以搜索所有订单（公开数据）
-    if (req.user && req.user.role !== 'admin') {
+    if (req.user && req.user.role !== 'admin' && req.user.role !== 'superadmin') {
       query.userId = req.user._id;
     }
 
@@ -28,6 +28,15 @@ router.get('/search', optionalAuthenticate, async (req, res) => {
       .populate('batch', 'name')
       .sort({ createdAt: -1 })
       .lean();
+
+    // 未登录用户隐藏客户姓名（显示为密文）
+    if (!req.user) {
+      orders.forEach(order => {
+        if (order.customerName && order.customerName.length > 0) {
+          order.customerName = order.customerName.charAt(0) + '*'.repeat(order.customerName.length - 1);
+        }
+      });
+    }
 
     res.json(orders);
   } catch (error) {
@@ -45,7 +54,7 @@ router.get('/', optionalAuthenticate, async (req, res) => {
     // 管理员可以查看所有订单
     // 已登录普通用户只能查看自己的订单
     // 未登录用户可以查看所有订单（公开数据）
-    if (req.user && req.user.role !== 'admin') {
+    if (req.user && req.user.role !== 'admin' && req.user.role !== 'superadmin') {
       query.userId = req.user._id;
     }
 
@@ -69,6 +78,17 @@ router.get('/', optionalAuthenticate, async (req, res) => {
       .skip(skip)
       .limit(parseInt(pageSize))
       .lean();
+
+    // 未登录用户隐藏客户姓名（显示为密文）
+    // 登录普通用户已经通过query.userId过滤，只能看到自己的订单，显示真实姓名
+    // 管理员可以看到所有真实姓名
+    if (!req.user) {
+      orders.forEach(order => {
+        if (order.customerName && order.customerName.length > 0) {
+          order.customerName = order.customerName.charAt(0) + '*'.repeat(order.customerName.length - 1);
+        }
+      });
+    }
 
     const total = await Order.countDocuments(query);
 
@@ -402,16 +422,22 @@ router.get('/:id', authenticate, async (req, res) => {
   try {
     const query = { _id: req.params.id };
 
-    if (req.user.role !== 'admin') {
+    if (req.user && req.user.role !== 'admin' && req.user.role !== 'superadmin') {
       query.userId = req.user._id;
     }
 
     const order = await Order.findOne(query)
       .populate('userId', 'nickname username')
-      .populate('batch', 'name');
+      .populate('batch', 'name')
+      .lean();
 
     if (!order) {
       return res.status(404).json({ error: '订单不存在' });
+    }
+
+    // 未登录用户隐藏客户姓名（显示为密文）
+    if (!req.user && order.customerName && order.customerName.length > 0) {
+      order.customerName = order.customerName.charAt(0) + '*'.repeat(order.customerName.length - 1);
     }
 
     res.json(order);

@@ -24,7 +24,7 @@ router.get('/', optionalAuthenticate, async (req, res) => {
       .limit(parseInt(pageSize));
 
     // 如果有用户登录且不是管理员，只返回有自己订单的批次
-    if (req.user && req.user.role !== 'admin') {
+    if (req.user && req.user.role !== 'admin' && req.user.role !== 'superadmin') {
       const userOrderBatches = await Order.distinct('batch', { userId: req.user._id });
       batches = batches.filter(batch => userOrderBatches.includes(batch._id));
     }
@@ -33,7 +33,7 @@ router.get('/', optionalAuthenticate, async (req, res) => {
     // 获取每个批次的详细信息（优化：批量查询）
     const batchIds = batches.map(b => b._id);
     const orderQuery = { batch: { $in: batchIds } };
-    if (req.user && req.user.role !== 'admin') {
+    if (req.user && req.user.role !== 'admin' && req.user.role !== 'superadmin') {
       orderQuery.userId = req.user._id;
     }
 
@@ -67,13 +67,23 @@ router.get('/', optionalAuthenticate, async (req, res) => {
 
     const batchesWithDetails = batches.map(batch => {
       const stats = statsMap.get(batch._id.toString());
-      const orders = (stats?.orders || []).map(order => ({
-        ...order,
-        userId: order.userId ? {
-          _id: order.userId,
-          nickname: userMap.get(order.userId.toString())?.nickname || ''
-        } : null
-      }));
+      const orders = (stats?.orders || []).map(order => {
+        let customerName = order.customerName;
+        
+        // 未登录用户隐藏客户姓名（显示为密文）
+        if (!req.user && customerName && customerName.length > 0) {
+          customerName = customerName.charAt(0) + '*'.repeat(customerName.length - 1);
+        }
+        
+        return {
+          ...order,
+          customerName,
+          userId: order.userId ? {
+            _id: order.userId,
+            nickname: userMap.get(order.userId.toString())?.nickname || ''
+          } : null
+        };
+      });
 
       return {
         ...batch.toObject(),
@@ -106,17 +116,29 @@ router.get('/:id', optionalAuthenticate, async (req, res) => {
     }
 
     const orderQuery = { batch: batch._id };
-    if (req.user && req.user.role !== 'admin') {
+    if (req.user && req.user.role !== 'admin' && req.user.role !== 'superadmin') {
       orderQuery.userId = req.user._id;
     }
 
     const orders = await Order.find(orderQuery)
       .populate('userId', 'nickname')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // 未登录用户隐藏客户姓名（显示为密文）
+    const processedOrders = orders.map(order => {
+      if (!req.user && order.customerName && order.customerName.length > 0) {
+        return {
+          ...order,
+          customerName: order.customerName.charAt(0) + '*'.repeat(order.customerName.length - 1)
+        };
+      }
+      return order;
+    });
 
     res.json({
       ...batch.toObject(),
-      orders
+      orders: processedOrders
     });
   } catch (error) {
     console.error('获取批次详情错误:', error);

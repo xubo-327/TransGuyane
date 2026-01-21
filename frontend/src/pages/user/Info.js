@@ -11,10 +11,13 @@ import {
 } from '@ant-design/icons';
 import { ordersAPI } from '../../services/api';
 import { detectCourier } from '../../utils/courierDetector';
+import { useAuth } from '../../contexts/AuthContext';
+import { formatCustomerName } from '../../utils/customerNameUtils';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 
 const UserInfo = () => {
+  const { user } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
@@ -176,6 +179,7 @@ const UserInfo = () => {
       dataIndex: 'customerName',
       key: 'customerName',
       width: 100,
+      render: (customerName, record) => formatCustomerName(customerName, user, record),
     },
     {
       title: '批次',
