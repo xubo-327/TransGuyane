@@ -108,14 +108,19 @@ router.post('/login', [
     });
 
     if (!user) {
+      console.error(`登录失败: 用户不存在 - 用户名: ${username}`);
       return res.status(401).json({ error: '用户名或密码错误' });
     }
 
     // 验证密码
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
+      console.error(`登录失败: 密码错误 - 用户名: ${username}, 角色: ${user.role}`);
       return res.status(401).json({ error: '用户名或密码错误' });
     }
+
+    // 记录成功登录
+    console.log(`登录成功: 用户名: ${user.username}, 角色: ${user.role}`);
 
     // 更新最后登录时间
     user.lastLoginAt = new Date();
