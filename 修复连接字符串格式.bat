@@ -1,0 +1,96 @@
+@echo off
+setlocal enabledelayedexpansion
+chcp 65001 >nul
+cls
+echo ========================================
+echo 修复 MongoDB Atlas 连接字符串格式
+echo ========================================
+echo.
+
+cd /d "%~dp0backend"
+if not exist ".env" (
+    echo [ERROR] 未找到 .env 文件
+    echo 请先运行: 一键配置Atlas连接.bat
+    pause
+    exit /b 1
+)
+
+echo [步骤 1/3] 检查当前配置...
+echo.
+findstr /C:"MONGODB_URI" .env
+echo.
+
+echo [步骤 2/3] 修复连接字符串格式...
+echo.
+
+REM 正确的连接字符串格式
+REM 注意：参数必须包含值，不能只是 retryWrites，必须是 retryWrites=true
+set "CORRECT_URI=mongodb+srv://x2440221078_db_user:Pjtu69a4XqCReP1Q@cluster0.zmojow7.mongodb.net/warehouse_management?retryWrites=true&w=majority"
+
+echo 正确的连接字符串:
+echo %CORRECT_URI%
+echo.
+
+REM 备份原文件
+copy .env .env.backup >nul 2>&1
+
+REM 读取现有 .env 文件并更新 MONGODB_URI
+(
+    for /f "usebackq tokens=1* delims==" %%a in (".env") do (
+        set "key=%%a"
+        set "value=%%b"
+        if "!key!"=="MONGODB_URI" (
+            echo MONGODB_URI=%CORRECT_URI%
+        ) else if "!key!" neq "" (
+            echo !key!=!value!
+        ) else (
+            echo.
+        )
+    )
+) > .env.tmp
+
+move /y .env.tmp .env >nul
+
+echo [OK] 连接字符串已修复
+echo.
+
+echo [步骤 3/3] 验证修复结果...
+echo.
+echo 更新后的 MONGODB_URI:
+findstr /C:"MONGODB_URI" .env
+echo.
+
+echo 连接字符串格式检查:
+findstr /C:"MONGODB_URI" .env | findstr "retryWrites=true" >nul 2>&1
+if %errorlevel% equ 0 (
+    echo [OK] 包含 retryWrites=true 参数
+) else (
+    echo [WARNING] 缺少 retryWrites=true 参数
+)
+
+findstr /C:"MONGODB_URI" .env | findstr "w=majority" >nul 2>&1
+if %errorlevel% equ 0 (
+    echo [OK] 包含 w=majority 参数
+) else (
+    echo [WARNING] 缺少 w=majority 参数
+)
+
+findstr /C:"MONGODB_URI" .env | findstr "/warehouse_management" >nul 2>&1
+if %errorlevel% equ 0 (
+    echo [OK] 包含数据库名称 (warehouse_management)
+) else (
+    echo [WARNING] 缺少数据库名称
+)
+
+echo.
+echo ========================================
+echo 修复完成
+echo ========================================
+echo.
+echo 下一步:
+echo   1. 测试连接: 检查云数据库配置.bat
+echo   2. 创建管理员: 创建管理员并测试登录.bat
+echo.
+
+cd ..
+pause
