@@ -142,15 +142,11 @@ const Register = () => {
             <Form.Item
               name="phone"
               label="手机号（可选）"
-              rules={[
-                { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确' }
-              ]}
             >
               <Input
                 prefix={<PhoneOutlined style={{ color: '#9CA3AF' }} />}
                 placeholder="请输入手机号"
                 size="large"
-                maxLength={11}
               />
             </Form.Item>
 

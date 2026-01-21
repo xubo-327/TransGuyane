@@ -10,7 +10,7 @@ router.post('/register', [
   body('username').trim().isLength({ min: 2, max: 20 }).withMessage('姓名长度必须在2-20个字符之间'),
   body('password').isLength({ min: 6 }).withMessage('密码长度至少6个字符'),
   body('email').optional().isEmail().withMessage('邮箱格式不正确'),
-  body('phone').optional().matches(/^1[3-9]\d{9}$/).withMessage('手机号格式不正确')
+  body('phone').optional().trim()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
