@@ -5,15 +5,11 @@ import {
   Button, 
   message, 
   Tag, 
-  Space, 
-  Card, 
-  Modal,
   Avatar,
   Empty,
   Tooltip,
   Select,
   Drawer,
-  List,
   Spin
 } from 'antd';
 import { 
@@ -73,6 +69,7 @@ const AdminCustomers = () => {
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagination.current, pagination.pageSize, searchText, roleFilter]);
 
   useEffect(() => {

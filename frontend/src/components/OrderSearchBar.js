@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Input, Button, Modal, Table, message, Empty, Spin, Tag, Tooltip } from 'antd';
-import { SearchOutlined, CloseOutlined } from '@ant-design/icons';
+import { Input, Button, Modal, Table, message, Empty, Spin, Tooltip } from 'antd';
+import { SearchOutlined } from '@ant-design/icons';
 import { ordersAPI } from '../services/api';
 import { detectCourier } from '../utils/courierDetector';
 import dayjs from 'dayjs';

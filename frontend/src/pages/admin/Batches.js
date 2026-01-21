@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Button, message, Popconfirm, Empty, Modal, Form, Input, Select, DatePicker, Space, Tag, Tooltip, Card, Statistic, InputNumber, Progress } from 'antd';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Table, Button, message, Popconfirm, Empty, Modal, Form, Input, Select, DatePicker, Space, Tag, Tooltip, InputNumber, Progress } from 'antd';
 import { 
   ArrowLeftOutlined, 
   PlusOutlined, 
@@ -39,11 +39,7 @@ const AdminBatches = () => {
   
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadBatches();
-  }, [pagination.current, pagination.pageSize]);
-
-  const loadBatches = async () => {
+  const loadBatches = useCallback(async () => {
     setLoading(true);
     try {
       const params = {
@@ -60,7 +56,11 @@ const AdminBatches = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pagination.current, pagination.pageSize, searchText]);
+
+  useEffect(() => {
+    loadBatches();
+  }, [loadBatches]);
 
   const handleSearch = () => {
     setPagination(prev => ({ ...prev, current: 1 }));

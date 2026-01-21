@@ -14,7 +14,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import OrderSearchBar from '../components/OrderSearchBar';
 
-const { Header, Content, Footer } = Layout;
+const { Header, Content } = Layout;
 
 const UserLayout = () => {
   const navigate = useNavigate();

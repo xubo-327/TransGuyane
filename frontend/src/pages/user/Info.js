@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Table, Input, Button, message, Tooltip, Empty, Select, Row, Col } from 'antd';
 import {
   SearchOutlined,
@@ -27,15 +27,7 @@ const UserInfo = () => {
   });
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadBatches();
-  }, []);
-
-  useEffect(() => {
-    loadOrders();
-  }, [activeFilter, filters]); // Reload when filter or activeFilter changes
-
-  const loadBatches = async () => {
+  const loadBatches = useCallback(async () => {
     try {
       const result = await ordersAPI.list({ page: 1, pageSize: 1000 });
       // Extract unique batch names from orders
@@ -44,9 +36,9 @@ const UserInfo = () => {
     } catch (error) {
       console.error('Loading batches failed:', error);
     }
-  };
+  }, []);
 
-  const loadOrders = async (searchValue = searchText) => {
+  const loadOrders = useCallback(async (searchValue = searchText) => {
     setLoading(true);
     try {
       const params = {
@@ -79,7 +71,15 @@ const UserInfo = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchText, activeFilter, filters]);
+
+  useEffect(() => {
+    loadBatches();
+  }, [loadBatches]);
+
+  useEffect(() => {
+    loadOrders();
+  }, [loadOrders]);
 
   const handleSearch = () => {
     loadOrders(searchText);
