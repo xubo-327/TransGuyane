@@ -110,8 +110,8 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: '服务器运行正常' });
 });
 
-// 临时端点：创建管理员（仅在第一次部署时使用，创建后建议删除）
-app.post('/api/create-admin', async (req, res) => {
+// 临时端点：批量创建管理员账户（仅在第一次部署时使用，创建后建议删除）
+app.post('/api/create-admins', async (req, res) => {
   try {
     // 确保数据库已连接
     if (mongoose.connection.readyState !== 1) {
@@ -119,49 +119,87 @@ app.post('/api/create-admin', async (req, res) => {
     }
 
     const User = require('./models/User');
-    const username = 'xubo327';
-    const password = '3273279x';
-
-    // 检查是否已存在
-    let user = await User.findOne({ username });
-
-    if (user) {
-      // 更新现有用户为管理员
-      user.role = 'admin';
-      user.password = password;
-      await user.save();
-      res.json({
-        success: true,
-        message: `管理员账号 ${username} 已更新为管理员角色`,
-        username,
-        password,
-        role: user.role,
-        id: user._id
-      });
-    } else {
-      // 创建新管理员
-      user = new User({
-        username,
-        password,
-        nickname: '管理员',
-        role: 'admin',
+    
+    // 定义要创建的管理员账户列表
+    const adminUsers = [
+      {
+        username: 'admin',
+        password: 'admin123',
+        role: 'superadmin',
+        nickname: '超级管理员',
         loginType: 'account'
-      });
-      await user.save();
-      res.json({
-        success: true,
-        message: `管理员账号 ${username} 创建成功`,
-        username,
-        password,
-        role: user.role,
-        id: user._id
-      });
+      },
+      {
+        username: 'xubo327',
+        password: '3273279x',
+        role: 'admin',
+        nickname: '普通管理员',
+        loginType: 'account'
+      },
+      {
+        username: 'zhousuda',
+        password: '20260101',
+        role: 'admin',
+        nickname: '普通管理员',
+        loginType: 'account'
+      }
+    ];
+
+    const results = [];
+    
+    for (const userData of adminUsers) {
+      try {
+        // 检查是否已存在
+        let user = await User.findOne({ username: userData.username });
+
+        if (user) {
+          // 更新现有用户为管理员
+          user.role = userData.role;
+          user.password = userData.password;
+          user.nickname = userData.nickname;
+          await user.save();
+          results.push({
+            username: userData.username,
+            status: 'updated',
+            role: user.role,
+            message: `管理员账号 ${userData.username} 已更新`
+          });
+        } else {
+          // 创建新管理员
+          user = new User(userData);
+          await user.save();
+          results.push({
+            username: userData.username,
+            status: 'created',
+            role: user.role,
+            message: `管理员账号 ${userData.username} 创建成功`
+          });
+        }
+      } catch (error) {
+        results.push({
+          username: userData.username,
+          status: 'error',
+          error: error.message
+        });
+      }
     }
+
+    res.json({
+      success: true,
+      message: '批量创建管理员账户完成',
+      results,
+      accounts: adminUsers.map(u => ({
+        username: u.username,
+        password: u.password,
+        role: u.role,
+        nickname: u.nickname
+      }))
+    });
   } catch (error) {
-    console.error('创建管理员失败:', error);
+    console.error('批量创建管理员失败:', error);
     res.status(500).json({
       success: false,
-      error: '创建管理员失败',
+      error: '批量创建管理员失败',
       message: error.message
     });
   }
