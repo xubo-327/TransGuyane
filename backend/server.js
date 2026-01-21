@@ -110,6 +110,63 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: '服务器运行正常' });
 });
 
+// 诊断端点：检查管理员账户是否存在
+app.get('/api/check-admins', async (req, res) => {
+  try {
+    // 确保数据库已连接
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(mongoUri, mongooseOptions);
+    }
+
+    const User = require('./models/User');
+    
+    // 检查三个管理员账户
+    const usernames = ['admin', 'xubo327', 'zhousuda'];
+    const results = [];
+    
+    for (const username of usernames) {
+      try {
+        const user = await User.findOne({ username });
+        if (user) {
+          results.push({
+            username,
+            exists: true,
+            role: user.role,
+            loginType: user.loginType,
+            hasPassword: !!user.password
+          });
+        } else {
+          results.push({
+            username,
+            exists: false
+          });
+        }
+      } catch (error) {
+        results.push({
+          username,
+          exists: false,
+          error: error.message
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      message: '账户检查完成',
+      results,
+      database: mongoose.connection.name,
+      connectionStatus: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+    });
+  } catch (error) {
+    console.error('检查账户失败:', error);
+    res.status(500).json({
+      success: false,
+      error: '检查账户失败',
+      message: error.message
+    });
+  }
+});
+
 // 临时端点：批量创建管理员账户（仅在第一次部署时使用，创建后建议删除）
 app.post('/api/create-admins', async (req, res) => {
   try {
