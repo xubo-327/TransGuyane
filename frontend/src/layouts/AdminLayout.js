@@ -69,9 +69,12 @@ const AdminLayout = () => {
           {/* Logo区域 */}
           <div className="logo-container" onClick={() => navigate('/admin/info')}>
             <img 
-              src="/logo.jpg" 
+              src={`${process.env.PUBLIC_URL || ''}/logo.jpg`} 
               alt="TransGuyane" 
               className="logo-image"
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
             />
             <div>
               <div className="logo-text">TransGuyane</div>
@@ -141,7 +144,7 @@ const AdminLayout = () => {
         title={
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <img 
-              src="/logo.jpg" 
+              src={`${process.env.PUBLIC_URL || ''}/logo.jpg`} 
               alt="TransGuyane" 
               style={{ width: 36, height: 36, borderRadius: 8 }}
             />

@@ -166,9 +166,12 @@ const Login = () => {
           {/* Logo区域 */}
           <div className="login-logo">
             <img 
-              src="/logo.jpg" 
+              src={`${process.env.PUBLIC_URL || ''}/logo.jpg`} 
               alt="TransGuyane" 
               className="login-logo-image"
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
             />
             <h1 className="logo-title">TransGuyane</h1>
             <p className="logo-subtitle">中国——法属圭亚那跨境物流</p>
