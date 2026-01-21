@@ -110,6 +110,63 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: '服务器运行正常' });
 });
 
+// 临时端点：创建管理员（仅在第一次部署时使用，创建后建议删除）
+app.post('/api/create-admin', async (req, res) => {
+  try {
+    // 确保数据库已连接
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(mongoUri, mongooseOptions);
+    }
+
+    const User = require('./models/User');
+    const username = 'xubo327';
+    const password = '3273279x';
+
+    // 检查是否已存在
+    let user = await User.findOne({ username });
+
+    if (user) {
+      // 更新现有用户为管理员
+      user.role = 'admin';
+      user.password = password;
+      await user.save();
+      res.json({
+        success: true,
+        message: `管理员账号 ${username} 已更新为管理员角色`,
+        username,
+        password,
+        role: user.role,
+        id: user._id
+      });
+    } else {
+      // 创建新管理员
+      user = new User({
+        username,
+        password,
+        nickname: '管理员',
+        role: 'admin',
+        loginType: 'account'
+      });
+      await user.save();
+      res.json({
+        success: true,
+        message: `管理员账号 ${username} 创建成功`,
+        username,
+        password,
+        role: user.role,
+        id: user._id
+      });
+    }
+  } catch (error) {
+    console.error('创建管理员失败:', error);
+    res.status(500).json({
+      success: false,
+      error: '创建管理员失败',
+      message: error.message
+    });
+  }
+});
+
 // 导出app供Vercel使用
 module.exports = app;
 
